@@ -1,0 +1,19 @@
+language: bash
+
+services: docker
+
+env:
+  - VERSION=9.6
+
+before_script:
+  - env | sort
+  - cd "src/$VERSION"
+  - IMAGE_NAME="chesszebra/postgresql:${VERSION}"
+
+script:
+  - travis_retry docker build -t "$IMAGE_NAME" .
+
+after_script:
+  - docker images
+
+# vim:set et ts=2 sw=2:
