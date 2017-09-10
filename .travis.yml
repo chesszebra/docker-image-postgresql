@@ -3,17 +3,27 @@ language: bash
 services: docker
 
 env:
-  - VERSION=9.6
+  global:
+    - secure: "JaSyDbPqxhrdMhY7aZTon+7oxrTmQj1s+WZQNnjfi9URzmIaYJaqjP9to7vsnaH7NCcWnBiFKu1s8acXg96q8j/xZ71tFtvUulBqLNCuR5nC7D6n0ggYDFwRYyjAc7im4JXUdhupN0+Ktz1Y9tVWwQGVKcMt7e2v354Fz8NojwfZol+MlRxZF67nJZP92wGhDGhhBiDbRUUkBwWErUMwyf5MgxtMK9mj92d8IvoA0XRKDPbNjk1IvZAGArBLKZkl/uZHdAZNTJMQfCkqmM6XaINVJ1ldhHF8/uYPMhWgk5VkGDTKFjtnwvJJXnMCM0fxZUiIWGgBf5slkZYJb4KSQO7SXa92w1msVjB2j8eCfkkv/xTDZVcUy5vWW3BNMVeBuhf35ZSAnXfMqwgiZp1wrBsG1OIFjM0PdwMpQkTyJGcMpCVtTu06PvN9Q1Q7f55TF1GXHDPhqVavgtFndqEJY2wXlyqt2N4+dL+NObtZwf0dbupce5i8YBK1zXV3TuJTWm+elFwY2Blq6kp/7RB51RercrwHWKAXUzgDdFjMGL7IaQ2F8avkR4pQw2mioCPAvahp9V/DJv5apdu+DXVMKwRpUE2JM6pHMOHoAZyJFumF6AYkFZ4k3xvkExX1QskXLz+ds7H7p8VzneI9u5C0h6ncuC9/T5VuKaYFNqJXkC8="
+    - secure: "BPXoeTLCSDrQw70EIRoeS7NiY7NQ4l64JM7ypTZ/oGz1tBKUHiMSreshpRXI9BzkPOxQK3ifrjJtp5JjzhmECs6k+vXRyh2eoJCnJUWsytC13SVCQsIVkkakFjX7IpdfKVuH+EEktll/A8RhDsKM83ilEd02wlIC1sf2dnM6xTIOm/joOuJcLiI4uncbi0IDNJIrCfoku7C7ZBBBLXXcpNBc+cRxrzW34xmZcprNZfJX03YRLS5xx5akBB2nTfOtAXRXl+oS3UIx3v5eSIXmB+XON1M1PQpL/ZNM175TVPMF0RKC47TZpyagy5ULFm2qPw/0+TRwv2u0Fn3VMdKpLVdhBp8PvyWjejpRzI/cohEO5UxWPivdr5t0Y8fi6UssasSGCSEz0+TlqgLSQDHARlfE9a+1q4yizL85GGQYkFYOTOyJczNtLY72MZfDgeO0cEQSY+8K5L2UkrDi8xUCmK5YgV27yUh8JFWYO7O26xO4mF7lpLfblw1kAwio//mkWdBhnovkhtkQFApKtdgZ5gzAfX/mpDAWtuOb1wCxQ0lj/opqwpskisGmfgUhDMv0EPeXI10fAAlHsUjrCq0Q3wz6G/clNBKd8Bli9uSvo/tgkZcaLZ2JG/4DaBDNu3HWmjTG2ZN+G7/8qzgksiJf2zfrAaHuPLXHfX6PUR93o00="
+  matrix:
+    - VERSION=9.6
+    - VERSION=latest VERSION_ALIAS=9.6
 
 before_script:
-  - env | sort
-  - cd "src/$VERSION"
-  - IMAGE_NAME="chesszebra/postgresql:${VERSION}"
+  - if [[ "$VERSION" != "latest" ]]; then cd "src/$VERSION"; fi
+  - if [[ "$VERSION" == "latest" ]]; then cd "src/$VERSION_ALIAS"; fi
+  - IMAGE_NAME="chesszebra/$(echo "$TRAVIS_REPO_SLUG" | cut -c 25-):${VERSION}"
 
 script:
-  - travis_retry docker build -t "$IMAGE_NAME" .
+  - docker build -t "$IMAGE_NAME" .
+
+after_success:
+  - docker login --username $DOCKER_USER --password $DOCKER_PASS
+  - docker push $IMAGE_NAME
 
 after_script:
   - docker images
 
-# vim:set et ts=2 sw=2:
+notifications:
+  email: false
